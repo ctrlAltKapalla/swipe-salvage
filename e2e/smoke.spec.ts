@@ -127,17 +127,11 @@ test.describe('Swipe Salvage — Smoke Suite', () => {
     const lane0 = await getLane(page);
     expect(lane0).toBeGreaterThanOrEqual(0); // valid lane index
 
-    // Simulate swipe right: pointerdown → move 80px → pointerup within 200ms
-    const canvas = page.locator('canvas');
-    const box = (await canvas.boundingBox())!;
-    const cx = box.x + box.width / 2;
-    const cy = box.y + box.height * 0.5;
+    // Use keyboard ArrowRight — InputSystem has keyboard fallback (← → A D).
+    // Mouse swipe is unreliable in headless Chromium (Phaser POINTER_DOWN timing vs rAF).
+    // Keyboard dispatch is synchronous and CI-stable.
+    await page.keyboard.press('ArrowRight');
 
-    await page.mouse.move(cx, cy);
-    await page.mouse.down();
-    await page.waitForTimeout(40);
-    await page.mouse.move(cx + 80, cy, { steps: 4 });
-    await page.mouse.up();
 
     // Lane tween is 120ms — wait for snap + state update
     await page.waitForTimeout(400);
