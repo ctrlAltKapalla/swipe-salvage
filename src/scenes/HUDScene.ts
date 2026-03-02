@@ -128,8 +128,12 @@ export class HUDScene extends Phaser.Scene {
 
     this.events.on(Phaser.Scenes.Events.RESUME, () => this.scene.bringToTop());
 
-    // Receive state via EventBus (HUDBroadcaster fires after every dispatch)
-    this.game.events.on('run:state', (s: RunState) => { this._state = s; }, this);
+    // Receive state via EventBus — HUDBroadcaster emits RunStatePayload wrapper:
+    // { state: RunState, phase, hp, ... }. Unwrap .state to get the full RunState.
+    // (setVisible(false) on a container does NOT stop Phaser delivering events)
+    this.game.events.on('run:state', (payload: { state: RunState }) => {
+      this._state = payload.state;
+    }, this);
     this.game.events.on('run:started', () => {
       this.goVisible = false;
       this.goGroup.setVisible(false).setAlpha(0);
