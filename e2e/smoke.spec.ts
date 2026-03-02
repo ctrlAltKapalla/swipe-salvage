@@ -184,10 +184,10 @@ test.describe('Swipe Salvage — Smoke Suite', () => {
         const scene = g?.scene?.getScene('RunScene') as any;
         const spawner = scene?.spawner;
         if (!spawner) return false;
-        const group = spawner._group ?? spawner.group;
-        if (!group) return false;
-        const active = group.getMatching?.('active', true) ?? [];
-        return active.length > 0;
+        // Use public getActiveCount() — pool/group property names are private
+        return typeof spawner.getActiveCount === 'function'
+          ? spawner.getActiveCount() > 0
+          : false;
       },
       { timeout: 15000, polling: 500 },
     );
@@ -196,7 +196,7 @@ test.describe('Swipe Salvage — Smoke Suite', () => {
       const g = (window as any).__game;
       const scene = g?.scene?.getScene('RunScene') as any;
       const spawner = scene?.spawner;
-      const group = spawner?._group ?? spawner?.group;
+      const group = spawner?.pool ?? spawner?._group ?? spawner?.group;
       return group?.getMatching?.('active', true)?.length ?? 0;
     });
 
