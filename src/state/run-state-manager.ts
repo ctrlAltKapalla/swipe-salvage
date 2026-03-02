@@ -15,6 +15,7 @@ import {
   TERMINAL_PHASES,
   PHASE_TRANSITIONS,
   PlayerVitals,
+  ScoreState,
 } from '../types/run-state';
 import { applyDelta, canAfford } from '../types/resources';
 import { RunAction } from './actions';
@@ -29,6 +30,25 @@ const LANE_COUNT = 5;
 const INVULN_AFTER_HIT_SECONDS = 0.8;
 const HEAT_OVERHEAT_THRESHOLD = 1.0;
 const DEFAULT_MAX_TRAIT_STACKS = 3; // fallback if TraitDef not in registry
+
+/**
+ * Passive score rate: points earned per world-distance unit traveled.
+ * Tunable via remote config — this is the baseline.
+ */
+const SCORE_PER_DISTANCE_UNIT = 1.0;
+
+/** Per-phase score rate multipliers (distance-based passive scoring). */
+const PHASE_SCORE_MULTIPLIERS: Partial<Record<RunPhase, number>> = {
+  warmup:  1.0,
+  mid:     1.5,
+  climax:  2.0,
+};
+
+/**
+ * Base run duration in seconds (GDD §19: "Base Run Length: 120s").
+ * Tunable via remote config (mutations may extend/shorten this).
+ */
+const RUN_DURATION_SECONDS = 120;
 
 // ---------------------------------------------------------------------------
 // Listener type
@@ -197,7 +217,7 @@ export class RunStateManager {
         return { ...state, phase: 'complete' };
 
       default: {
-        const _exhaustive: never = action; throw new Error(`Unhandled action: ${JSON.stringify(_exhaustive)}`);
+        const _exhaustive: never = action;
         return state;
       }
     }
@@ -216,7 +236,22 @@ export class RunStateManager {
     if (nextElapsed >= 90 && ['warmup', 'mid'].includes(nextPhase)) nextPhase = 'climax';
     else if (nextElapsed >= 30 && nextPhase === 'warmup') nextPhase = 'mid';
 
+    // Run duration check — must happen before phase is used for scoring below.
+    // Terminal: run completes when elapsed time reaches the run duration limit.
+    // Do not override an already-terminal phase (e.g. player died mid-run).
+    if (!TERMINAL_PHASES.has(nextPhase) && nextElapsed >= RUN_DURATION_SECONDS) {
+      nextPhase = 'complete';
+    }
+
     const nextEncounterInSeconds = Math.max(0, state.nextEncounterInSeconds - dt);
+
+    // Passive distance-based score accumulation.
+    // Score does not tick during encounters or terminal phases.
+    const phaseRate = PHASE_SCORE_MULTIPLIERS[nextPhase] ?? 0;
+    const passiveScore =
+      nextPhase !== 'encounter' && phaseRate > 0
+        ? Math.floor(distanceDelta * SCORE_PER_DISTANCE_UNIT * phaseRate * state.score.multiplier)
+        : 0;
 
     return {
       ...state,
@@ -225,6 +260,9 @@ export class RunStateManager {
       phase: nextPhase,
       priorPhase: nextPhase !== state.phase ? state.phase : state.priorPhase,
       nextEncounterInSeconds,
+      score: passiveScore > 0
+        ? { ...state.score, baseScore: state.score.baseScore + passiveScore }
+        : state.score,
     };
   }
 

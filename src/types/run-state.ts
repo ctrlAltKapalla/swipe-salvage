@@ -174,7 +174,7 @@ export function createInitialRunState(
   biomeId: string,
   activeModules: ReadonlyArray<LoadoutModule | null>,
   passiveCores: ReadonlyArray<LoadoutModule | null>,
-  _laneCount: number,
+  laneCount: number,
   startingLane: number,
 ): RunState {
   return {

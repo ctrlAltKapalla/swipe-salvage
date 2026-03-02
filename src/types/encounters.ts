@@ -4,6 +4,8 @@
  */
 
 import type { ResourceDelta } from './resources';
+import type { TraitDef } from './traits';
+import type { ModuleDef } from './modules';
 
 // ---------------------------------------------------------------------------
 // Encounter kinds
