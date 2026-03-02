@@ -103,6 +103,7 @@ export class HUDScene extends Phaser.Scene {
 
   // Game-over
   private goGroup!:   Phaser.GameObjects.Container;
+  private goBtn!:     Phaser.GameObjects.Rectangle;
   private goScore!:   Phaser.GameObjects.Text;
   /** @internal exposed for E2E tests */
   goVisible = false;
@@ -287,8 +288,10 @@ export class HUDScene extends Phaser.Scene {
     this.goScore = this.add.text(cx, cy - 10, 'Score: 0', {
       fontFamily: FONT, fontSize: `${px(20, W, 0.05)}px`, color: '#cceeff',
     }).setOrigin(0.5).setDepth(201);
+    // NOT interactive at create-time — enabled in showGameOver(), disabled in hideGameOver()
     const btn = this.add.rectangle(cx, cy + 60, 168, 48, 0x003333, 0.92)
-      .setStrokeStyle(2, C.ACCENT).setDepth(201).setInteractive({ useHandCursor: true });
+      .setStrokeStyle(2, C.ACCENT).setDepth(201);
+    this.goBtn = btn;
     const btnTxt = this.add.text(cx, cy + 60, 'PLAY AGAIN', {
       fontFamily: FONT, fontSize: `${px(16, W, 0.041)}px`, color: '#00ffee', letterSpacing: 3,
     }).setOrigin(0.5).setDepth(202);
@@ -447,6 +450,7 @@ export class HUDScene extends Phaser.Scene {
   private showGameOver(score: number) {
     this.goVisible = true;
     this.goScore.setText(`Score: ${score.toLocaleString()}`);
+    this.goBtn.setInteractive({ useHandCursor: true });
     this.goGroup.setVisible(true).setAlpha(0);
     this.tweens.add({ targets: this.goGroup, alpha: 1,
       duration: ReducedMotion.duration(T_FADE), ease: 'Quad.easeOut' });
@@ -454,6 +458,7 @@ export class HUDScene extends Phaser.Scene {
 
   private hideGameOver() {
     this.goVisible = false;
+    this.goBtn.disableInteractive();
     this.tweens.add({ targets: this.goGroup, alpha: 0,
       duration: ReducedMotion.duration(T_FADE),
       onComplete: () => this.goGroup.setVisible(false) });
