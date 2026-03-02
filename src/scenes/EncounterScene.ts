@@ -99,7 +99,8 @@ export class EncounterScene extends Phaser.Scene {
       color: '#446677',
       letterSpacing: 3,
     }).setOrigin(0.5).setDepth(302).setAlpha(0)
-      .setInteractive({ useHandCursor: true });
+      // NOT interactive at create-time — enabled in open(), disabled in close()
+      ;
 
     this.closeBtn.on(Phaser.Input.Events.POINTER_UP, () => this.close());
 
@@ -115,8 +116,9 @@ export class EncounterScene extends Phaser.Scene {
     this._data = data;
     this.scene.bringToTop();
     this.clearCards();
-    // Enable bg hit-block only while encounter is open
+    // Enable hit-blocks only while encounter is open
     this.bg.setInteractive();
+    this.closeBtn.setInteractive({ useHandCursor: true });
 
     if (data.type === 'risk_gate') {
       this.buildRiskGate(data.options ?? []);
@@ -239,8 +241,9 @@ export class EncounterScene extends Phaser.Scene {
       duration: dur,
       onComplete: () => {
         this.clearCards();
-        // Remove hit-block so RunScene receives pointer events again
+        // Remove hit-blocks so RunScene receives pointer events again
         this.bg.disableInteractive();
+        this.closeBtn.disableInteractive();
         this.game.events.emit('encounter:closed');
       },
     });
