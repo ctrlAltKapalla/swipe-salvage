@@ -41,11 +41,8 @@ jobs:
       - name: Install Playwright (Chromium only)
         run: npx playwright install --with-deps chromium
 
-      - name: Run E2E tests (3x retry, advisory)
+      - name: Run E2E tests (3x retry)
         run: npx playwright test --retries=3
-        continue-on-error: true
-        # Known CI flakiness: WebGL pixel-sampling + timer NaN in headless
-        # Tests are advisory until fixed — deploy is not blocked
 
       - name: Upload Playwright report
         if: always()
