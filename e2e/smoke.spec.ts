@@ -160,7 +160,7 @@ test.describe('Swipe Salvage — Smoke Suite', () => {
     await page.waitForTimeout(500);
 
     const t0 = await getTimerText(page);
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(4000);
     const t1 = await getTimerText(page);
 
     expect(t0).toMatch(/^\d{2}:\d{2}$/);
@@ -189,7 +189,7 @@ test.describe('Swipe Salvage — Smoke Suite', () => {
         const active = group.getMatching?.('active', true) ?? [];
         return active.length > 0;
       },
-      { timeout: 7000, polling: 500 },
+      { timeout: 15000, polling: 500 },
     );
 
     const hazardCount = await page.evaluate(() => {

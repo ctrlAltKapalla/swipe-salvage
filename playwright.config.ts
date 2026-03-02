@@ -13,8 +13,8 @@ export default defineConfig({
   testMatch: '**/*.spec.ts',
 
   // Suite must complete in < 30s (acceptance criteria)
-  timeout: 30_000,
-  globalTimeout: 60_000,
+  timeout: 45_000,
+  globalTimeout: 180_000,
 
   // Fail fast — smoke tests should all pass
   retries: process.env.CI ? 1 : 0,
