@@ -71,8 +71,10 @@ export class EncounterScene extends Phaser.Scene {
     const H = this.scale.height;
 
     // Full-screen dim
+    // NOT interactive at create-time — only enabled during open() to avoid
+    // blocking RunScene pointer events on the start screen (bug fix T-79ccda48)
     this.bg = this.add.rectangle(W / 2, H / 2, W, H, C.BG, 0)
-      .setDepth(300).setInteractive(); // blocks clicks through
+      .setDepth(300);
 
     // Title + subtitle (populated on open)
     this.titleText = this.add.text(W / 2, H * 0.28, '', {
@@ -111,9 +113,10 @@ export class EncounterScene extends Phaser.Scene {
   // ── Open ──────────────────────────────────────────────────────────────────
   private open(data: EncounterData) {
     this._data = data;
-    this.scene.resume(ENCOUNTER_SCENE_KEY);
     this.scene.bringToTop();
     this.clearCards();
+    // Enable bg hit-block only while encounter is open
+    this.bg.setInteractive();
 
     if (data.type === 'risk_gate') {
       this.buildRiskGate(data.options ?? []);
@@ -236,7 +239,8 @@ export class EncounterScene extends Phaser.Scene {
       duration: dur,
       onComplete: () => {
         this.clearCards();
-        this.scene.pause(ENCOUNTER_SCENE_KEY);
+        // Remove hit-block so RunScene receives pointer events again
+        this.bg.disableInteractive();
         this.game.events.emit('encounter:closed');
       },
     });
